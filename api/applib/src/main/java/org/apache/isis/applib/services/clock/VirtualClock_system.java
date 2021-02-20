@@ -23,7 +23,7 @@ import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-final class VirtualClock_system implements VirtualClock {
+final class VirtualClockSystem implements VirtualClock {
 
     private static final long serialVersionUID = 4019699893189814294L;
 

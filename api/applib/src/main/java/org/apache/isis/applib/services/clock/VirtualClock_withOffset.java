@@ -24,7 +24,7 @@ import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-final class VirtualClock_withOffset implements VirtualClock {
+final class VirtualClockWithOffset implements VirtualClock {
 
     private static final long serialVersionUID = -2589204298085221985L;
     
@@ -52,13 +52,15 @@ final class VirtualClock_withOffset implements VirtualClock {
             return false;
         }
         // equal if same class and same millisOffset
-        if(!Objects.equals(this.getClass(), obj.getClass())) {
+        else if(!Objects.equals(this.getClass(), obj.getClass())) {
             return false;
         }
-        if(!Objects.equals(this.millisOffset, ((VirtualClock_withOffset)obj).millisOffset)) {
+        else if(!Objects.equals(this.millisOffset, ((VirtualClockWithOffset)obj).millisOffset)) {
             return false;
         }
-        return true;
+        else {
+            return true;
+        }
     }
     
     @Override

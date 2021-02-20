@@ -18,8 +18,6 @@
  */
 package org.apache.isis.applib.services.clock;
 
-import org.apache.isis.applib.services.clock.VirtualClock;
-
 /**
  * This service allows an application to be decoupled from the system time.
  * The most common use case is in support of testing scenarios, to &quot;mock the clock&quot;.
@@ -37,42 +35,5 @@ public interface ClockService {
     default long getEpochMillis() {
         return getClock().getEpochMillis();
     }
-
-//    public java.time.LocalDate now() {
-//        return Clock.getTimeAsLocalDate();
-//    }
-//
-//    public java.time.LocalDateTime nowAsLocalDateTime() {
-//        return Clock.getTimeAsLocalDateTime();
-//    }
-//
-//    public java.time.OffsetDateTime nowAsOffsetDateTime() {
-//        return Clock.getTimeAsOffsetDateTime();
-//    }
-//
-//    public java.sql.Timestamp nowAsJavaSqlTimestamp() {
-//        return Clock.getTimeAsJavaSqlTimestamp();
-//    }
-//
-//    public XMLGregorianCalendar nowAsXMLGregorianCalendar() {
-//        return JavaSqlXMLGregorianCalendarMarshalling.toXMLGregorianCalendar(nowAsJavaSqlTimestamp());
-//    }
-//
-//    public long nowAsMillis() {
-//        return Clock.getEpochMillis();
-//    }
-//
-//    public java.util.Date nowAsJavaUtilDate() {
-//        return new java.util.Date(nowAsMillis());
-//    }
-//
-//    public org.joda.time.DateTime nowAsJodaDateTime() {
-//        return Clock.getTimeAsJodaDateTime();
-//    }
-//
-//    public org.joda.time.LocalDate nowAsJodaLocalDate() {
-//        final DateTimeZone timeZone = DateTimeZone.forTimeZone(TimeZone.getDefault());
-//        return new org.joda.time.LocalDate(nowAsMillis(), timeZone);
-//    }
 
 }

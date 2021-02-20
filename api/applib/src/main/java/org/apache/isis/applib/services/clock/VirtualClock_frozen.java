@@ -24,7 +24,7 @@ import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-final class VirtualClock_frozen implements VirtualClock {
+final class VirtualClockFrozen implements VirtualClock {
 
     private static final long serialVersionUID = -2589204298085221985L;
     
@@ -48,13 +48,15 @@ final class VirtualClock_frozen implements VirtualClock {
             return false;
         }
         // equal if same class and same frozenInstant
-        if(!Objects.equals(this.getClass(), obj.getClass())) {
+        else if(!Objects.equals(this.getClass(), obj.getClass())) {
             return false;
         }
-        if(!Objects.equals(this.frozenInstant, ((VirtualClock_frozen)obj).frozenInstant)) {
+        else if(!Objects.equals(this.frozenInstant, ((VirtualClockFrozen)obj).frozenInstant)) {
             return false;
         }
-        return true;
+        else {
+            return true;
+        }
     }
     
     @Override
