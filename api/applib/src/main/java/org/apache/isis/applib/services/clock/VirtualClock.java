@@ -70,7 +70,7 @@ public interface VirtualClock extends Serializable {
      * Returns a the system's default ticking clock.
      */
     static VirtualClock system() {
-        return new VirtualClockFrozensystem();
+        return new VirtualClockSystem();
     }
 
     /**
@@ -79,14 +79,14 @@ public interface VirtualClock extends Serializable {
     static VirtualClock nowAt(@NonNull Instant virtualNow) {
         // positive if the resulting clock is in the future
         val offsetMillis = ChronoUnit.MILLIS.between(Instant.now(), virtualNow);
-        return new VirtualClockFrozenwithOffset(offsetMillis);
+        return new VirtualClockWithOffset(offsetMillis);
     }
 
     /**
      * Always returns the time {@link Instant} as given by {@code frozenAt}
      */
     static VirtualClock frozenAt(@NonNull Instant frozenAt) {
-        return new VirtualClockFrozenfrozen(frozenAt);
+        return new VirtualClockFrozen(frozenAt);
     }
 
     /**
