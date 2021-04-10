@@ -16,7 +16,7 @@
  *  specific language governing permissions and limitations
  *  under the License.
  */
-package org.apache.isis.applib.clock;
+package org.apache.isis.applib.services.clock;
 
 import java.io.Serializable;
 import java.time.Instant;
@@ -70,7 +70,7 @@ public interface VirtualClock extends Serializable {
      * Returns a the system's default ticking clock.
      */
     static VirtualClock system() {
-        return new VirtualClock_system();
+        return new VirtualClockSystem();
     }
 
     /**
@@ -79,14 +79,14 @@ public interface VirtualClock extends Serializable {
     static VirtualClock nowAt(@NonNull Instant virtualNow) {
         // positive if the resulting clock is in the future
         val offsetMillis = ChronoUnit.MILLIS.between(Instant.now(), virtualNow);
-        return new VirtualClock_withOffset(offsetMillis);
+        return new VirtualClockWithOffset(offsetMillis);
     }
 
     /**
      * Always returns the time {@link Instant} as given by {@code frozenAt}
      */
     static VirtualClock frozenAt(@NonNull Instant frozenAt) {
-        return new VirtualClock_frozen(frozenAt);
+        return new VirtualClockFrozen(frozenAt);
     }
 
     /**
