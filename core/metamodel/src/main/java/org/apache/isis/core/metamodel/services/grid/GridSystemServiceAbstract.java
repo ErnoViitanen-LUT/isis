@@ -18,8 +18,6 @@
  */
 package org.apache.isis.core.metamodel.services.grid;
 
-import static org.apache.isis.core.metamodel.facetapi.FacetUtil.addOrReplaceFacet;
-
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -86,6 +84,8 @@ import org.apache.isis.core.metamodel.spec.feature.ObjectMember;
 import org.apache.isis.core.metamodel.spec.feature.OneToManyAssociation;
 import org.apache.isis.core.metamodel.spec.feature.OneToOneAssociation;
 import org.apache.isis.core.metamodel.specloader.SpecificationLoader;
+
+import static org.apache.isis.core.metamodel.facetapi.FacetUtil.addOrReplaceFacet;
 
 import lombok.Value;
 import lombok.val;
@@ -177,7 +177,7 @@ implements GridSystemService<G> {
             final G fcGrid,
             final Class<?> domainClass) {
 
-        val objectSpec = specificationLoader.loadSpecification(domainClass);
+        val objectSpec = specificationLoader.specForTypeElseFail(domainClass);
 
         val oneToOneAssociationById = ObjectMember.mapById(getOneToOneAssociations(objectSpec));
         val oneToManyAssociationById = ObjectMember.mapById(getOneToManyAssociations(objectSpec));
@@ -358,7 +358,7 @@ implements GridSystemService<G> {
     @Override
     public void complete(final G grid, final Class<?> domainClass) {
         normalize(grid, domainClass);
-        val objectSpec = specificationLoader.loadSpecification(domainClass);
+        val objectSpec = specificationLoader.specForTypeElseFail(domainClass);
         grid.visit(MetamodelToGridOverridingVisitor.of(objectSpec));
     }
 

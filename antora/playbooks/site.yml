@@ -115,9 +115,6 @@ content:
       start_path: extensions/core/flyway/adoc # userguide
       branches: HEAD
     - url: .
-      start_path: extensions/core/model-annotation/adoc # extensions
-      branches: HEAD
-    - url: .
       start_path: extensions/core/quartz/adoc # userguide
       branches: HEAD
 
@@ -132,6 +129,9 @@ content:
       branches: HEAD
     - url: .
       start_path: extensions/security/shiro-realm-ldap/adoc # security
+      branches: HEAD
+    - url: .
+      start_path: extensions/security/spring-oauth2/src/main/adoc # security
       branches: HEAD
 
     - url: .

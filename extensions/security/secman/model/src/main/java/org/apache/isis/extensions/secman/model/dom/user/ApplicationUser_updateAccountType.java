@@ -18,11 +18,11 @@
  */
 package org.apache.isis.extensions.secman.model.dom.user;
 
-import javax.enterprise.inject.Model;
 import javax.inject.Inject;
 
 import org.apache.isis.applib.annotation.Action;
 import org.apache.isis.applib.annotation.ActionLayout;
+import org.apache.isis.applib.annotation.MemberSupport;
 import org.apache.isis.extensions.secman.api.user.AccountType;
 import org.apache.isis.extensions.secman.api.user.ApplicationUser;
 import org.apache.isis.extensions.secman.api.user.ApplicationUser.UpdateAccountTypeDomainEvent;
@@ -41,22 +41,22 @@ public class ApplicationUser_updateAccountType {
     
     private final ApplicationUser target;
 
-    @Model
+    @MemberSupport
     public ApplicationUser act(
             final AccountType accountType) {
         target.setAccountType(accountType);
         return target;
     }
     
-    @Model
-    public String disableUpdateAccountType() {
+    @MemberSupport
+    public String disableAct() {
         return applicationUserRepository.isAdminUser(target)
                 ? "Cannot change account type for admin user"
                         : null;
     }
     
-    @Model
-    public AccountType default0UpdateAccountType() {
+    @MemberSupport
+    public AccountType default0Act() {
         return target.getAccountType();
     }
 

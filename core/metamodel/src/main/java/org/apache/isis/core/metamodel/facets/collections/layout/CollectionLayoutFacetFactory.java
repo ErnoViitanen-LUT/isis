@@ -22,6 +22,7 @@ import org.apache.isis.applib.annotation.CollectionLayout;
 import org.apache.isis.core.metamodel.facetapi.FeatureType;
 import org.apache.isis.core.metamodel.facets.FacetFactoryAbstract;
 import org.apache.isis.core.metamodel.facets.members.layout.order.LayoutOrderFacetFromCollectionLayoutAnnotation;
+import org.apache.isis.core.metamodel.specloader.validator.MetaModelValidatorForAmbiguousMixinAnnotations;
 
 import lombok.val;
 
@@ -36,7 +37,11 @@ extends FacetFactoryAbstract {
     public void process(final ProcessMethodContext processMethodContext) {
 
         val facetHolder = processMethodContext.getFacetHolder();
-        val collectionLayoutIfAny = processMethodContext.synthesizeOnMethodOrMixinType(CollectionLayout.class);
+        val collectionLayoutIfAny = processMethodContext
+                .synthesizeOnMethodOrMixinType(
+                        CollectionLayout.class, 
+                        () -> MetaModelValidatorForAmbiguousMixinAnnotations
+                        .addValidationFailure(processMethodContext.getFacetHolder(), CollectionLayout.class));
 
         val cssClassFacet = CssClassFacetForCollectionLayoutAnnotation
                 .create(collectionLayoutIfAny, facetHolder);
@@ -70,7 +75,5 @@ extends FacetFactoryAbstract {
                 .create(collectionLayoutIfAny, facetHolder);
         super.addFacet(sortedByFacet);
     }
-
-
 
 }

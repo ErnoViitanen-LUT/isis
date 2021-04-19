@@ -28,6 +28,14 @@ there is no counterpart for _Collection_
 | `@MemberOrder(sequence=...)` removed
 | use `@ActionLayout/@PropertyLayout/@CollectionLayout(sequence=...)` instead
 
+| `@Model` (from extensions) removed
+| use `@MemberSupport`  (Applib) instead
 
 |===
+
+== Other Changes
+
+Module `IsisModuleExtModelAnnotation` was removed and is no longer required.
+
+Service `BookmarkService` has been improved, such that its methods return `Optional<?>` instead of nullable objects. 
 

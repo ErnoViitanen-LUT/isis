@@ -18,8 +18,6 @@
  */
 package org.apache.isis.core.metamodel.services.grid.bootstrap3;
 
-import static org.apache.isis.commons.internal.base._NullSafe.stream;
-
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -70,6 +68,8 @@ import org.apache.isis.core.metamodel.spec.feature.ObjectAssociation;
 import org.apache.isis.core.metamodel.spec.feature.ObjectMember;
 import org.apache.isis.core.metamodel.spec.feature.OneToManyAssociation;
 import org.apache.isis.core.metamodel.spec.feature.OneToOneAssociation;
+
+import static org.apache.isis.commons.internal.base._NullSafe.stream;
 
 import lombok.val;
 import lombok.extern.log4j.Log4j2;
@@ -172,7 +172,7 @@ public class GridSystemServiceBS3 extends GridSystemServiceAbstract<BS3Grid> {
             final Class<?> domainClass) {
 
         val bs3Grid = (BS3Grid) grid;
-        val objectSpec = specificationLoader.loadSpecification(domainClass);
+        val objectSpec = specificationLoader.specForTypeElseFail(domainClass);
 
         val oneToOneAssociationById = ObjectMember.mapById(getOneToOneAssociations(objectSpec));
         val oneToManyAssociationById = ObjectMember.mapById(getOneToManyAssociations(objectSpec));

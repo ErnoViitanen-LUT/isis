@@ -47,11 +47,13 @@ import org.apache.isis.core.metamodel.facets.members.publish.command.CommandPubl
 import org.apache.isis.core.metamodel.facets.members.publish.execution.ExecutionPublishingActionFacetForActionAnnotation;
 import org.apache.isis.core.metamodel.facets.object.domainobject.domainevents.ActionDomainEventDefaultFacetForDomainObjectAnnotation;
 import org.apache.isis.core.metamodel.spec.ObjectSpecification;
+import org.apache.isis.core.metamodel.specloader.validator.MetaModelValidatorForAmbiguousMixinAnnotations;
 import org.apache.isis.core.metamodel.util.EventUtil;
 
 import lombok.val;
 
-public class ActionAnnotationFacetFactory extends FacetFactoryAbstract {
+public class ActionAnnotationFacetFactory
+extends FacetFactoryAbstract {
 
     public ActionAnnotationFacetFactory() {
         super(FeatureType.ACTIONS_ONLY);
@@ -60,7 +62,11 @@ public class ActionAnnotationFacetFactory extends FacetFactoryAbstract {
     @Override
     public void process(final ProcessMethodContext processMethodContext) {
 
-        val actionIfAny = processMethodContext.synthesizeOnMethodOrMixinType(Action.class);
+        val actionIfAny = processMethodContext
+                .synthesizeOnMethodOrMixinType(
+                        Action.class, 
+                        () -> MetaModelValidatorForAmbiguousMixinAnnotations
+                        .addValidationFailure(processMethodContext.getFacetHolder(), Action.class));
 
         processExplicit(processMethodContext, actionIfAny);
         processInvocation(processMethodContext, actionIfAny);
@@ -284,5 +290,6 @@ public class ActionAnnotationFacetFactory extends FacetFactoryAbstract {
         val facet = FileAcceptFacetForActionAnnotation.create(actionIfAny, holder);
         super.addFacet(facet);
     }
+
 
 }

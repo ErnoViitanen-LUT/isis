@@ -18,15 +18,16 @@
  */
 package org.apache.isis.extensions.secman.model.dom.role;
 
-import javax.enterprise.inject.Model;
 import javax.inject.Inject;
 
 import org.apache.isis.applib.annotation.Action;
 import org.apache.isis.applib.annotation.ActionLayout;
+import org.apache.isis.applib.annotation.MemberSupport;
 import org.apache.isis.applib.annotation.MinLength;
 import org.apache.isis.applib.annotation.Optionality;
 import org.apache.isis.applib.annotation.Parameter;
 import org.apache.isis.applib.annotation.ParameterLayout;
+import org.apache.isis.applib.annotation.PromptStyle;
 import org.apache.isis.applib.services.appfeat.ApplicationFeature;
 import org.apache.isis.applib.services.appfeat.ApplicationFeatureRepository;
 import org.apache.isis.extensions.secman.api.permission.ApplicationPermission;
@@ -44,7 +45,10 @@ import lombok.experimental.Accessors;
 @Action(
         domainEvent = AddPermissionDomainEvent.class, 
         associateWith = "permissions")
-@ActionLayout(named="Add", sequence = "0")
+@ActionLayout(
+		named="Add",
+		sequence = "0",
+		promptStyle = PromptStyle.DIALOG_MODAL)
 @RequiredArgsConstructor
 public class ApplicationRole_addPermission {
     
@@ -84,17 +88,17 @@ public class ApplicationRole_addPermission {
         return target;
     }
 
-    @Model
+    @MemberSupport
     public ApplicationPermissionRule defaultRule(Parameters params) {
         return ApplicationPermissionRule.ALLOW;
     }
 
-    @Model
+    @MemberSupport
     public ApplicationPermissionMode defaultMode(Parameters params) {
         return ApplicationPermissionMode.CHANGING;
     }
 
-    @Model
+    @MemberSupport
     public java.util.Collection<ApplicationFeatureChoices.AppFeat> autoCompleteFeature(
             final Parameters params,
             final @MinLength(3) String search) {

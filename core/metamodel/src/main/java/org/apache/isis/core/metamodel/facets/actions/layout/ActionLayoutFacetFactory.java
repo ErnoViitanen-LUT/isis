@@ -36,12 +36,13 @@ import org.apache.isis.core.metamodel.facets.members.layout.order.LayoutOrderFac
 import org.apache.isis.core.metamodel.facets.members.layout.order.LayoutOrderFacetFromActionLayoutAnnotation;
 import org.apache.isis.core.metamodel.facets.object.bookmarkpolicy.BookmarkPolicyFacet;
 import org.apache.isis.core.metamodel.facets.object.promptStyle.PromptStyleFacet;
+import org.apache.isis.core.metamodel.specloader.validator.MetaModelValidatorForAmbiguousMixinAnnotations;
 
 import lombok.val;
 
 public class ActionLayoutFacetFactory 
 extends FacetFactoryAbstract {
-
+    
     public ActionLayoutFacetFactory() {
         super(FeatureType.ACTIONS_ONLY);
     }
@@ -50,7 +51,11 @@ extends FacetFactoryAbstract {
     public void process(final ProcessMethodContext processMethodContext) {
 
         val facetHolder = processMethodContext.getFacetHolder();
-        val actionLayoutIfAny = processMethodContext.synthesizeOnMethodOrMixinType(ActionLayout.class);
+        val actionLayoutIfAny = processMethodContext
+                .synthesizeOnMethodOrMixinType(
+                        ActionLayout.class,
+                        () -> MetaModelValidatorForAmbiguousMixinAnnotations
+                        .addValidationFailure(processMethodContext.getFacetHolder(), ActionLayout.class));
         
         // bookmarkable
         BookmarkPolicyFacet bookmarkableFacet = BookmarkPolicyFacetForActionLayoutAnnotation
@@ -107,5 +112,6 @@ extends FacetFactoryAbstract {
         super.addFacet(layoutOrderFacet);
 
     }
+
 
 }

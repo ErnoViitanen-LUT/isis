@@ -25,9 +25,8 @@ import org.apache.isis.applib.services.title.TitleService;
 import org.apache.isis.commons.internal.base._Blackhole;
 import org.apache.isis.core.config.messages.MessageRegistry;
 import org.apache.isis.core.metamodel.specloader.validator.MetaModelValidatorAbstract;
-import org.apache.isis.core.metamodel.specloader.validator.ValidationFailures;
+import org.apache.isis.core.metamodel.specloader.validator.ValidationFailure;
 
-import lombok.NonNull;
 import lombok.val;
 
 /**
@@ -35,16 +34,14 @@ import lombok.val;
  * @since 2.0
  *
  */
-public class TitlesAndTranslationsValidator extends MetaModelValidatorAbstract {
+public class TitlesAndTranslationsValidator 
+extends MetaModelValidatorAbstract {
 
     @Override
-    public void collectFailuresInto(@NonNull ValidationFailures validationFailures) {
-        
+    public void validate() {
         validateServiceTitles();
         validateEnumTitles();
         validateRegisteredMessageTranslation();
-        
-        super.collectFailuresInto(validationFailures);
     }
 
     private void validateServiceTitles() {
@@ -65,13 +62,14 @@ public class TitlesAndTranslationsValidator extends MetaModelValidatorAbstract {
                 
                 val deficiencyOrigin = Identifier.classIdentifier(
                         LogicalType.eager(managedBeanAdapter.getBeanClass(), objectType));
-                val facetHolder = specificationLoader.loadSpecification(managedBeanAdapter.getBeanClass());
                 
-                super.onFailure(
-                        facetHolder, 
+                ValidationFailure.raise(
+                        specificationLoader, 
                         deficiencyOrigin, 
-                        "Failed to get instance of service bean %s", 
-                        managedBeanAdapter.getId());
+                        String.format(
+                                "Failed to get instance of service bean %s", 
+                                managedBeanAdapter.getId())
+                        );
                 return; // next
             }
 
@@ -86,13 +84,14 @@ public class TitlesAndTranslationsValidator extends MetaModelValidatorAbstract {
                 
                 val deficiencyOrigin = Identifier.classIdentifier(
                         LogicalType.eager(managedBeanAdapter.getBeanClass(), objectType));
-                val facetHolder = specificationLoader.loadSpecification(managedBeanAdapter.getBeanClass());
 
-                super.onFailure(
-                        facetHolder, 
+                ValidationFailure.raise(
+                        specificationLoader, 
                         deficiencyOrigin, 
-                        "Failed to get title for service bean %s", 
-                        managedBeanAdapter.getId());
+                        String.format(
+                                "Failed to get title for service bean %s", 
+                                managedBeanAdapter.getId())
+                        );
             }
 
 
@@ -124,11 +123,13 @@ public class TitlesAndTranslationsValidator extends MetaModelValidatorAbstract {
                         val deficiencyOrigin = Identifier.classIdentifier(objSpec.getLogicalType());
                         val facetHolder = objSpec;
 
-                        super.onFailure(
-                                facetHolder, 
+                        ValidationFailure.raise(
+                                facetHolder.getSpecificationLoader(), 
                                 deficiencyOrigin, 
-                                "Failed to get title for enum constant %s", 
-                                "" + enumConstant);
+                                String.format(
+                                        "Failed to get title for enum constant %s", 
+                                        "" + enumConstant)
+                                );
                     }
 
                 }
@@ -157,18 +158,21 @@ public class TitlesAndTranslationsValidator extends MetaModelValidatorAbstract {
 
             } catch (Exception e) {
 
-                val spec = specificationLoader.loadSpecification(MessageRegistry.class);
+                val spec = specificationLoader.specForTypeElseFail(MessageRegistry.class);
                 val deficiencyOrigin = Identifier.classIdentifier(spec.getLogicalType());
 
-                super.onFailure(
-                        spec, 
+                ValidationFailure.raise(
+                        spec.getSpecificationLoader(), 
                         deficiencyOrigin, 
-                        "Failed to translate message %s from MessageRegistry", 
-                        "" + message);
+                        String.format(
+                                "Failed to translate message %s from MessageRegistry", 
+                                "" + message)
+                        );
             }
 
         }
 
     }
+
 
 }

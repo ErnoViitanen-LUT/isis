@@ -22,15 +22,14 @@ import org.apache.isis.applib.Identifier;
 import org.apache.isis.applib.id.LogicalType;
 import org.apache.isis.commons.internal.reflection._Reflect;
 import org.apache.isis.core.metamodel.facetapi.FacetHolder;
-import org.apache.isis.core.metamodel.specloader.validator.MetaModelValidatorAbstract;
+import org.apache.isis.core.metamodel.specloader.validator.ValidationFailure;
 
 import static org.apache.isis.commons.internal.reflection._Reflect.Filter.paramCount;
 
 import lombok.NonNull;
 import lombok.val;
 
-public class MetaModelValidatorForMixinTypes 
-extends MetaModelValidatorAbstract {
+public class MetaModelValidatorForMixinTypes {
 
     private final String annotation;
 
@@ -51,20 +50,24 @@ extends MetaModelValidatorAbstract {
         }
         
         if(mixinContructors.getCardinality().isZero()) {
-            onFailure(
-                    facetHolder,
+            ValidationFailure.raise(
+                    facetHolder.getSpecificationLoader(),
                     Identifier.classIdentifier(LogicalType.fqcn(candidateMixinType)),
-                    "%s: annotated with %s annotation but does not have a public 1-arg constructor",
-                    candidateMixinType.getName(), 
-                    annotation);
+                    String.format(
+                        "%s: annotated with %s annotation but does not have a public 1-arg constructor",
+                        candidateMixinType.getName(), 
+                        annotation)
+                    );
         } else {
-            onFailure(
-                    facetHolder,
+            ValidationFailure.raise(
+                    facetHolder.getSpecificationLoader(),
                     Identifier.classIdentifier(LogicalType.fqcn(candidateMixinType)),
-                    "%s: annotated with %s annotation needs a single public 1-arg constructor but has %d",
-                    candidateMixinType.getName(), 
-                    annotation,
-                    mixinContructors.size());
+                    String.format(
+                            "%s: annotated with %s annotation needs a single public 1-arg constructor but has %d",
+                            candidateMixinType.getName(), 
+                            annotation,
+                            mixinContructors.size())
+                    );
         }
         return false;
     }

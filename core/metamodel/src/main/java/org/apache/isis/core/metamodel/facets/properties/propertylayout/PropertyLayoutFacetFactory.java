@@ -24,12 +24,13 @@ import org.apache.isis.core.metamodel.facetapi.FeatureType;
 import org.apache.isis.core.metamodel.facets.FacetFactoryAbstract;
 import org.apache.isis.core.metamodel.facets.members.layout.group.LayoutGroupFacetFromPropertyLayoutAnnotation;
 import org.apache.isis.core.metamodel.facets.members.layout.order.LayoutOrderFacetFromPropertyLayoutAnnotation;
+import org.apache.isis.core.metamodel.specloader.validator.MetaModelValidatorForAmbiguousMixinAnnotations;
 
 import lombok.val;
 
 public class PropertyLayoutFacetFactory 
 extends FacetFactoryAbstract {
-
+    
     public PropertyLayoutFacetFactory() {
         super(FeatureType.PROPERTIES_AND_ACTIONS);
     }
@@ -39,7 +40,10 @@ extends FacetFactoryAbstract {
 
         val facetHolder = processMethodContext.getFacetHolder();
         val propertyLayoutIfAny = processMethodContext
-                .synthesizeOnMethodOrMixinType(PropertyLayout.class);
+                .synthesizeOnMethodOrMixinType(
+                        PropertyLayout.class, 
+                        () -> MetaModelValidatorForAmbiguousMixinAnnotations
+                        .addValidationFailure(processMethodContext.getFacetHolder(), PropertyLayout.class));
 
         val cssClassFacet = CssClassFacetForPropertyLayoutAnnotation
                 .create(propertyLayoutIfAny, facetHolder);
@@ -90,5 +94,6 @@ extends FacetFactoryAbstract {
         super.addFacet(unchangingFacet);
         
     }
+    
 
 }

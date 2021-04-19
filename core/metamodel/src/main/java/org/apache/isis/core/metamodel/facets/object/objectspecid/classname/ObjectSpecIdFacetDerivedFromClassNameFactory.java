@@ -37,8 +37,7 @@ import org.apache.isis.core.metamodel.services.classsubstitutor.ClassSubstitutor
 import org.apache.isis.core.metamodel.services.classsubstitutor.ClassSubstitutorRegistry;
 import org.apache.isis.core.metamodel.spec.ObjectSpecification;
 import org.apache.isis.core.metamodel.spec.feature.MixedIn;
-import org.apache.isis.core.metamodel.specloader.validator.MetaModelValidator;
-import org.apache.isis.core.metamodel.specloader.validator.MetaModelValidatorVisiting;
+import org.apache.isis.core.metamodel.specloader.validator.ValidationFailure;
 
 import lombok.val;
 
@@ -112,45 +111,26 @@ implements MetaModelRefiner, ObjectSpecIdFacetFactory {
             return;
         }
 
-        programmingModel.addValidatorSkipManagedBeans(
-
-            new MetaModelValidatorVisiting.Visitor() {
+        programmingModel.addVisitingValidatorSkipManagedBeans(objectSpec-> {
+                    
+            if(!check(objectSpec)) {
+                return;
+            }
+            
+            val objectSpecIdFacet = objectSpec.getFacet(ObjectSpecIdFacet.class);
+            if(objectSpecIdFacet instanceof ObjectSpecIdFacetDerivedFromClassName) {
+                ValidationFailure.raiseFormatted(
+                        objectSpec,
+                        "%s: the object type must be specified explicitly ('%s' config property). "
+                                + "Defaulting the object type from the package/class/package name can lead "
+                                + "to data migration issues for apps deployed to production (if the class is "
+                                + "subsequently refactored). "
+                                + "Use @Discriminator, @DomainObject(objectType=...) or "
+                                + "@PersistenceCapable(schema=...) to specify explicitly.",
+                        objectSpec.getFullIdentifier(),
+                        "isis.core.meta-model.validator.explicit-object-type");
+            } 
                 
-                @Override
-                public boolean visit(
-                        ObjectSpecification objectSpec,
-                        MetaModelValidator validator) {
-                    
-                    validate(objectSpec, validator);
-                    return true;
-                }
-    
-                private void validate(
-                        ObjectSpecification objectSpec,
-                        MetaModelValidator validator) {
-                    
-                    if(skip(objectSpec)) {
-                        return;
-                    }
-                    val objectSpecIdFacet = objectSpec.getFacet(ObjectSpecIdFacet.class);
-                    if(objectSpecIdFacet instanceof ObjectSpecIdFacetDerivedFromClassName) {
-                        validator.onFailure(
-                                objectSpec,
-                                objectSpec.getIdentifier(),
-                                "%s: the object type must be specified explicitly ('%s' config property). "
-                                        + "Defaulting the object type from the package/class/package name can lead "
-                                        + "to data migration issues for apps deployed to production (if the class is "
-                                        + "subsequently refactored). "
-                                        + "Use @Discriminator, @DomainObject(objectType=...) or "
-                                        + "@PersistenceCapable(schema=...) to specify explicitly.",
-                                objectSpec.getFullIdentifier(),
-                                "isis.core.meta-model.validator.explicit-object-type");
-                    } 
-                }
-    
-                private boolean skip(ObjectSpecification objectSpec) {
-                    return !check(objectSpec);
-                }
             });
 
     }

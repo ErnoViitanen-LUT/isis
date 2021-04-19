@@ -20,7 +20,6 @@ package org.apache.isis.core.metamodel.facets.object.domainobject;
 
 import java.lang.reflect.Method;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -41,7 +40,6 @@ import org.apache.isis.applib.events.lifecycle.ObjectUpdatedEvent;
 import org.apache.isis.applib.events.lifecycle.ObjectUpdatingEvent;
 import org.apache.isis.applib.id.LogicalType;
 import org.apache.isis.applib.mixins.system.HasInteractionId;
-import org.apache.isis.commons.internal.collections._Maps;
 import org.apache.isis.commons.internal.collections._Multimaps;
 import org.apache.isis.core.metamodel.context.MetaModelContext;
 import org.apache.isis.core.metamodel.facetapi.FacetHolder;
@@ -49,7 +47,6 @@ import org.apache.isis.core.metamodel.facetapi.FacetUtil;
 import org.apache.isis.core.metamodel.facetapi.FeatureType;
 import org.apache.isis.core.metamodel.facetapi.MetaModelRefiner;
 import org.apache.isis.core.metamodel.facets.FacetFactoryAbstract;
-import org.apache.isis.core.metamodel.facets.MethodFinderUtils;
 import org.apache.isis.core.metamodel.facets.ObjectSpecIdFacetFactory;
 import org.apache.isis.core.metamodel.facets.PostConstructMethodCache;
 import org.apache.isis.core.metamodel.facets.object.autocomplete.AutoCompleteFacet;
@@ -73,38 +70,38 @@ import org.apache.isis.core.metamodel.facets.object.domainobject.recreatable.Rec
 import org.apache.isis.core.metamodel.facets.object.mixin.MetaModelValidatorForMixinTypes;
 import org.apache.isis.core.metamodel.facets.object.mixin.MixinFacetForDomainObjectAnnotation;
 import org.apache.isis.core.metamodel.facets.object.viewmodel.ViewModelFacet;
+import org.apache.isis.core.metamodel.methods.MethodByClassMap;
+import org.apache.isis.core.metamodel.methods.MethodFinderUtils;
 import org.apache.isis.core.metamodel.progmodel.ProgrammingModel;
 import org.apache.isis.core.metamodel.spec.ObjectSpecification;
-import org.apache.isis.core.metamodel.specloader.validator.MetaModelValidator;
-import org.apache.isis.core.metamodel.specloader.validator.MetaModelValidatorForValidationFailures;
-import org.apache.isis.core.metamodel.specloader.validator.MetaModelValidatorVisiting;
+import org.apache.isis.core.metamodel.specloader.validator.MetaModelVisitingValidatorAbstract;
+import org.apache.isis.core.metamodel.specloader.validator.ValidationFailure;
 import org.apache.isis.core.metamodel.util.EventUtil;
 
 import static org.apache.isis.commons.internal.base._NullSafe.stream;
 
+import lombok.NonNull;
 import lombok.val;
 
-
-public class DomainObjectAnnotationFacetFactory extends FacetFactoryAbstract
-implements MetaModelRefiner, PostConstructMethodCache, ObjectSpecIdFacetFactory {
-
-    private final MetaModelValidatorForValidationFailures autoCompleteMethodInvalid =
-            new MetaModelValidatorForValidationFailures();
+public class DomainObjectAnnotationFacetFactory 
+extends FacetFactoryAbstract
+implements 
+    MetaModelRefiner, 
+    PostConstructMethodCache, 
+    ObjectSpecIdFacetFactory {
 
     private final MetaModelValidatorForMixinTypes mixinTypeValidator =
             new MetaModelValidatorForMixinTypes("@DomainObject#nature=MIXIN");
 
-
-
-    public DomainObjectAnnotationFacetFactory() {
+    public DomainObjectAnnotationFacetFactory(
+            final @NonNull MethodByClassMap postConstructMethodsCache) {
         super(FeatureType.OBJECTS_ONLY);
+        this.postConstructMethodsCache = postConstructMethodsCache;
     }
 
     @Override
     public void setMetaModelContext(MetaModelContext metaModelContext) {
         super.setMetaModelContext(metaModelContext);
-        autoCompleteMethodInvalid.setMetaModelContext(metaModelContext);
-        mixinTypeValidator.setMetaModelContext(metaModelContext);
     }
 
     @Override
@@ -218,11 +215,16 @@ implements MetaModelRefiner, PostConstructMethodCache, ObjectSpecIdFacetFactory 
                 }
             }
         }
-        autoCompleteMethodInvalid.onFailure(
-                facetHolder,
+        ValidationFailure.raise(
+                facetHolder.getSpecificationLoader(),
                 Identifier.classIdentifier(LogicalType.fqcn(cls)),
-                "%s annotation on %s specifies method '%s' that does not exist in repository '%s'",
-                annotationName, cls.getName(), methodName, repositoryClass.getName());
+                String.format(
+                        "%s annotation on %s specifies method '%s' that does not exist in repository '%s'",
+                        annotationName, 
+                        cls.getName(), 
+                        methodName, 
+                        repositoryClass.getName())
+                );
         return null;
     }
 
@@ -477,13 +479,9 @@ implements MetaModelRefiner, PostConstructMethodCache, ObjectSpecIdFacetFactory 
 
     @Override
     public void refineProgrammingModel(ProgrammingModel programmingModel) {
-
         if(getConfiguration().getCore().getMetaModel().getValidator().isEnsureUniqueObjectTypes()) {
             addValidatorToEnsureUniqueLogicalTypeNames(programmingModel);
         }
-
-        programmingModel.addValidator(autoCompleteMethodInvalid);
-        programmingModel.addValidator(mixinTypeValidator);
     }
 
     private void addValidatorToEnsureUniqueLogicalTypeNames(ProgrammingModel pm) {
@@ -491,17 +489,19 @@ implements MetaModelRefiner, PostConstructMethodCache, ObjectSpecIdFacetFactory 
         final _Multimaps.ListMultimap<String, ObjectSpecification> collidingSpecsByLogicalTypeName =
                 _Multimaps.newConcurrentListMultimap();
 
-        final MetaModelValidatorVisiting.SummarizingVisitor ensureUniqueObjectIds =
-                new MetaModelValidatorVisiting.SummarizingVisitor(){
+        final MetaModelVisitingValidatorAbstract ensureUniqueObjectIds =
+                new MetaModelVisitingValidatorAbstract(){
 
                     @Override
-                    public boolean visit(ObjectSpecification objSpec, MetaModelValidator validator) {
+                    public void validate(ObjectSpecification objSpec) {
+                        if(objSpec.isManagedBean()) {
+                            return;
+                        }
                         collidingSpecsByLogicalTypeName.putElement(objSpec.getLogicalTypeName() , objSpec);
-                        return true;
                     }
 
                     @Override
-                    public void summarize(MetaModelValidator validator) {
+                    public void summarize() {
                         for (val logicalTypeName : collidingSpecsByLogicalTypeName.keySet()) {
                             val collidingSpecs = collidingSpecsByLogicalTypeName.get(logicalTypeName);
                             val isCollision = collidingSpecs.size()>1;
@@ -509,9 +509,8 @@ implements MetaModelRefiner, PostConstructMethodCache, ObjectSpecIdFacetFactory 
                                 val csv = asCsv(collidingSpecs);
 
                                 collidingSpecs.forEach(spec->{
-                                    validator.onFailure(
+                                    ValidationFailure.raiseFormatted(
                                             spec,
-                                            spec.getIdentifier(),
                                             "Logical-type-name (aka. object-type) '%s' mapped to multiple classes: %s",
                                             logicalTypeName,
                                             csv);
@@ -532,17 +531,17 @@ implements MetaModelRefiner, PostConstructMethodCache, ObjectSpecIdFacetFactory 
 
                 };
 
-        pm.addValidatorSkipManagedBeans(ensureUniqueObjectIds);
+        pm.addValidator(ensureUniqueObjectIds);
     }
 
 
     // //////////////////////////////////////
 
-    private final Map<Class<?>, Optional<Method>> postConstructMethods = _Maps.newHashMap();
+    private final MethodByClassMap postConstructMethodsCache;
 
     @Override
     public Method postConstructMethodFor(final Object pojo) {
-        return MethodFinderUtils.findAnnotatedMethod(pojo, PostConstruct.class, postConstructMethods);
+        return MethodFinderUtils.findAnnotatedMethod(pojo, PostConstruct.class, postConstructMethodsCache);
     }
 
 
